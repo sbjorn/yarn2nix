@@ -332,8 +332,13 @@ in rec {
       installPhase = attrs.installPhase or ''
         runHook preInstall
 
-        mkdir -p $out/{bin,libexec/${pname}}
-        mv node_modules $out/libexec/${pname}/node_modules
+        mkdir -p $out/bin $out/libexec/${pname}/node_modules
+        # Link in dependencies rather than making a copy to keep closure size down
+        for m in ${deps}/node_modules/*
+        do
+           ln -s $m $out/libexec/${pname}/node_modules/
+        done
+        mv node_modules/${pname} $out/libexec/${pname}/node_modules
         mv deps $out/libexec/${pname}/deps
 
         node ${./internal/fixup_bin.js} $out/bin $out/libexec/${pname}/node_modules ${lib.concatStringsSep " " publishBinsFor_}
